@@ -19,6 +19,7 @@ surface_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SURFACE_TEM
 sea_temperature_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE"))
 sea_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE_MAP"))
 ice_volume_channel: int | None = int(os.getenv("CHANNEL_ICE_VOLUME"))
+co2_graph_channel: int | None = int(os.getenv("CHANNEL_CO2_GRAPH"))
 
 
 async def wait_until(hour: int, minute: int = 0):
@@ -68,6 +69,7 @@ async def on_ready():
     update_sea_temperature.start()
     update_sea_temperature_map.start()
     update_ice_volume.start()
+    update_co2_graph.start()
 
 
 @tasks.loop(hours=24)
@@ -123,6 +125,16 @@ async def update_ice_volume():
     link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_curve_thick_LA_EN_{date_str}.png"
     filename = f"ice_volume_{date_str}.png"
     await send_image_or_link(channel, link, "Graphique du volume de glace arctique :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_co2_graph():
+    if co2_graph_channel is None:
+        return
+    channel = client.get_channel(co2_graph_channel)
+    link = "https://scripps.ucsd.edu/bluemoon/co2_400/mlo_two_years.png"
+    filename = f"co2_graph.png"
+    await send_image_or_link(channel, link, "Graphique de la concentration en CO2", filename)
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
