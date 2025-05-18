@@ -28,6 +28,7 @@ async def wait_until(hour: int, minute: int = 0):
     if now >= target:
         target += timedelta(days=1)
     print(f"Waiting until {target} to start tasks.")
+    print(f"Current time: {now}")
     await asyncio.sleep((target - now).total_seconds())
 
 
@@ -64,7 +65,7 @@ async def send_image_or_link(channel, link, message, filename):
 
 @client.event
 async def on_ready():
-    await wait_until(10, 45)
+    await wait_until(10, 50)
     print("Bot is ready.")
     update_surface_temperature.start()
     update_surface_temperature_map.start()
