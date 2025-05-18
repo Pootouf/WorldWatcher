@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime, timedelta
 from discord.ext import tasks
 import discord
@@ -20,14 +19,6 @@ sea_temperature_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE"))
 sea_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE_MAP"))
 ice_volume_channel: int | None = int(os.getenv("CHANNEL_ICE_VOLUME"))
 co2_graph_channel: int | None = int(os.getenv("CHANNEL_CO2_GRAPH"))
-
-
-async def wait_until(hour: int, minute: int = 0):
-    now = datetime.now()
-    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if now >= target:
-        target += timedelta(days=1)
-    await asyncio.sleep((target - now).total_seconds())
 
 
 class UnsafeTLSAdapter(HTTPAdapter):
@@ -63,7 +54,6 @@ async def send_image_or_link(channel, link, message, filename):
 
 @client.event
 async def on_ready():
-    await wait_until(8)
     update_surface_temperature.start()
     update_surface_temperature_map.start()
     update_sea_temperature.start()
