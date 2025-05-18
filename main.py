@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from discord.ext import tasks
 import discord
@@ -19,6 +20,15 @@ sea_temperature_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE"))
 sea_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE_MAP"))
 ice_volume_channel: int | None = int(os.getenv("CHANNEL_ICE_VOLUME"))
 co2_graph_channel: int | None = int(os.getenv("CHANNEL_CO2_GRAPH"))
+
+
+async def wait_until(hour: int, minute: int = 0):
+    now = datetime.now()
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if now >= target:
+        target += timedelta(days=1)
+    print(f"Waiting until {target} to start tasks.")
+    await asyncio.sleep((target - now).total_seconds())
 
 
 class UnsafeTLSAdapter(HTTPAdapter):
@@ -54,6 +64,8 @@ async def send_image_or_link(channel, link, message, filename):
 
 @client.event
 async def on_ready():
+    await wait_until(10, 45)
+    print("Bot is ready.")
     update_surface_temperature.start()
     update_surface_temperature_map.start()
     update_sea_temperature.start()
@@ -66,6 +78,7 @@ async def on_ready():
 async def update_surface_temperature():
     if surface_temperature_channel is None:
         return
+    print("Updating surface temperature...")
     channel = client.get_channel(surface_temperature_channel)
     date_str = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/timeseries/era5_daily_series_2t_global_{date_str}.png"
@@ -77,6 +90,7 @@ async def update_surface_temperature():
 async def update_surface_temperature_map():
     if surface_temperature_map_channel is None:
         return
+    print("Updating surface temperature map...")
     channel = client.get_channel(surface_temperature_map_channel)
     date_str = (datetime.now() - timedelta(days=4)).strftime("%Y%m%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/maps/download/daily/2t/anomaly/2025/climpulse_map_era5_download_daily_2t_anomaly_{date_str}.png"
@@ -88,6 +102,7 @@ async def update_surface_temperature_map():
 async def update_sea_temperature():
     if sea_temperature_channel is None:
         return
+    print("Updating sea temperature...")
     channel = client.get_channel(sea_temperature_channel)
     date_str = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/timeseries/era5_daily_series_sst_60S-60N_ocean_{date_str}.png"
@@ -99,6 +114,7 @@ async def update_sea_temperature():
 async def update_sea_temperature_map():
     if sea_temperature_map_channel is None:
         return
+    print("Updating sea temperature map...")
     channel = client.get_channel(sea_temperature_map_channel)
     date_str = (datetime.now() - timedelta(days=4)).strftime("%Y%m%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/maps/download/daily/sst/anomaly/2025/climpulse_map_era5_download_daily_sst_anomaly_{date_str}.png"
@@ -110,6 +126,7 @@ async def update_sea_temperature_map():
 async def update_ice_volume():
     if ice_volume_channel is None:
         return
+    print("Updating ice volume...")
     channel = client.get_channel(ice_volume_channel)
     date_str = datetime.now().strftime("%Y%m%d")
     link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_curve_thick_LA_EN_{date_str}.png"
@@ -121,6 +138,7 @@ async def update_ice_volume():
 async def update_co2_graph():
     if co2_graph_channel is None:
         return
+    print("Updating CO2 graph...")
     channel = client.get_channel(co2_graph_channel)
     link = "https://scripps.ucsd.edu/bluemoon/co2_400/mlo_two_years.png"
     filename = f"co2_graph.png"
