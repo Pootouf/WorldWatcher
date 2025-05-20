@@ -30,6 +30,9 @@ ice_volume_map_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME_MAP")
 co2_graph_channel: int | None = get_channel_env("CHANNEL_CO2_GRAPH")
 greenland_surface_channel: int | None = get_channel_env("CHANNEL_GREENLAND_SURFACE")
 greenland_melt_channel: int | None = get_channel_env("CHANNEL_GREENLAND_MELT")
+antarctic_sea_ice_extent_graph: int | None = get_channel_env("CHANNEL_ANTARCTIC_SEA_ICE_EXTENT_GRAPH")
+antarctic_sea_ice_extent_map: int | None = get_channel_env("CHANNEL_ANTARCTIC_SEA_ICE_EXTENT_MAP")
+antarctic_sea_ice_concentration_map: int | None = get_channel_env("CHANNEL_ANTARCTIC_SEA_ICE_CONCENTRATION_MAP")
 
 
 async def wait_until(hour: int, minute: int = 0):
@@ -86,6 +89,9 @@ async def on_ready():
     update_ice_volume_map.start()
     update_greenland_surface.start()
     update_greenland_melt.start()
+    update_antarctic_sea_ice_concentration_map.start()
+    update_antarctic_sea_ice_extent_map.start()
+    update_antarctic_sea_ice_extent_graph.start()
 
 
 @tasks.loop(hours=24)
@@ -185,6 +191,39 @@ async def update_greenland_melt():
 
 
 @tasks.loop(hours=24)
+async def update_antarctic_sea_ice_extent_graph():
+    if antarctic_sea_ice_extent_graph is None:
+        return
+    print("Updating Antarctic sea ice extent graph...")
+    channel = client.get_channel(antarctic_sea_ice_extent_graph)
+    link = "https://nsidc.org/data/seaice_index/images/daily_images/S_iqr_timeseries.png"
+    filename = "antarctic_sea_ice_extent.png"
+    await send_image_or_link(channel, link, "Graphique sur l'extension de la mer de glace Antarctique :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_antarctic_sea_ice_extent_map():
+    if antarctic_sea_ice_extent_map is None:
+        return
+    print("Updating Antarctic sea ice extent map...")
+    channel = client.get_channel(antarctic_sea_ice_extent_map)
+    link = "https://nsidc.org/data/seaice_index/images/daily_images/S_daily_extent_hires.png"
+    filename = "antarctic_sea_ice_extent_map.png"
+    await send_image_or_link(channel, link, "Map de l'extension de la mer de glace Antarctique :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_antarctic_sea_ice_concentration_map():
+    if antarctic_sea_ice_concentration_map is None:
+        return
+    print("Updating Antarctic sea ice extent map...")
+    channel = client.get_channel(antarctic_sea_ice_extent_map)
+    link = "https://nsidc.org/data/seaice_index/images/daily_images/S_daily_concentration_hires.png"
+    filename = "antarctic_sea_ice_concentration_map.png"
+    await send_image_or_link(channel, link, "Map de la concentration de la mer de glace Antarctique :", filename)
+
+
+@tasks.loop(hours=24)
 async def update_co2_graph():
     if co2_graph_channel is None:
         return
@@ -192,7 +231,7 @@ async def update_co2_graph():
     channel = client.get_channel(co2_graph_channel)
     link = "https://scripps.ucsd.edu/bluemoon/co2_400/mlo_two_years.png"
     filename = f"co2_graph.png"
-    await send_image_or_link(channel, link, "Graphique de la concentration en CO2", filename)
+    await send_image_or_link(channel, link, "Graphique de la concentration en CO2 :", filename)
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
