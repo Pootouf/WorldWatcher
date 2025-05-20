@@ -29,6 +29,7 @@ ice_volume_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME")
 ice_volume_map_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME_MAP")
 co2_graph_channel: int | None = get_channel_env("CHANNEL_CO2_GRAPH")
 greenland_surface_graph_channel: int | None = get_channel_env("CHANNEL_GREENLAND_SURFACE_GRAPH")
+greenland_melt_channel: int | None = get_channel_env("CHANNEL_GREENLAND_MELT")
 
 
 async def wait_until(hour: int, minute: int = 0):
@@ -84,6 +85,7 @@ async def on_ready():
     update_co2_graph.start()
     update_ice_volume_map.start()
     update_greenland_surface_graph.start()
+    update_greenland_melt.start()
 
 
 @tasks.loop(hours=24)
@@ -164,7 +166,19 @@ async def update_greenland_surface_graph():
         return
     print("Updating Greenland surface graph...")
     channel = client.get_channel(greenland_surface_graph_channel)
-    date_str = datetime.now().strftime("%Y%m%d")
+    date_str = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+    link = f"https://polarportal.dk/fileadmin/polarportal/meltarea/MELTA_combine_SM_EN_{date_str}.png"
+    filename = f"greenland_melt_{date_str}.png"
+    await send_image_or_link(channel, link, "Informations sur le niveau de fonte de la glace du Groenland :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_greenland_melt():
+    if greenland_melt_channel is None:
+        return
+    print("Updating Greenland melt stats...")
+    channel = client.get_channel(greenland_melt_channel)
+    date_str = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
     link = f"https://polarportal.dk/fileadmin/polarportal/surface/SMB_curves_LA_EN_{date_str}.png"
     filename = f"greenland_surface_graph_{date_str}.png"
     await send_image_or_link(channel, link, "Graphiques sur le niveau de glace du Groenland :", filename)
