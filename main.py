@@ -26,6 +26,7 @@ surface_temperature_map_channel: int | None = get_channel_env("CHANNEL_SURFACE_T
 sea_temperature_channel: int | None = get_channel_env("CHANNEL_SEA_TEMPERATURE")
 sea_temperature_map_channel: int | None = get_channel_env("CHANNEL_SEA_TEMPERATURE_MAP")
 ice_volume_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME")
+ice_volume_map_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME_MAP")
 co2_graph_channel: int | None = get_channel_env("CHANNEL_CO2_GRAPH")
 
 
@@ -140,6 +141,18 @@ async def update_ice_volume():
     link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_curve_thick_LA_EN_{date_str}.png"
     filename = f"ice_volume_{date_str}.png"
     await send_image_or_link(channel, link, "Graphique du volume de glace arctique :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_ice_volume_graph():
+    if ice_volume_map_channel is None:
+        return
+    print("Updating ice volume map...")
+    channel = client.get_channel(ice_volume_map_channel)
+    date_str = datetime.now().strftime("%Y%m%d")
+    link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_map_thick_LA_EN_{date_str}.png"
+    filename = f"ice_volume_map_{date_str}.png"
+    await send_image_or_link(channel, link, "Map du volume de glace arctique :", filename)
 
 
 @tasks.loop(hours=24)
