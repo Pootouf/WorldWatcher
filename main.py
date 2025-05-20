@@ -28,6 +28,7 @@ sea_temperature_map_channel: int | None = get_channel_env("CHANNEL_SEA_TEMPERATU
 ice_volume_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME")
 ice_volume_map_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME_MAP")
 co2_graph_channel: int | None = get_channel_env("CHANNEL_CO2_GRAPH")
+greenland_surface_graph_channel: int | None = get_channel_env("CHANNEL_GREENLAND_SURFACE_GRAPH")
 
 
 async def wait_until(hour: int, minute: int = 0):
@@ -81,6 +82,8 @@ async def on_ready():
     update_sea_temperature_map.start()
     update_ice_volume.start()
     update_co2_graph.start()
+    update_ice_volume_map.start()
+    update_greenland_surface_graph.start()
 
 
 @tasks.loop(hours=24)
@@ -144,7 +147,7 @@ async def update_ice_volume():
 
 
 @tasks.loop(hours=24)
-async def update_ice_volume_graph():
+async def update_ice_volume_map():
     if ice_volume_map_channel is None:
         return
     print("Updating ice volume map...")
@@ -153,6 +156,18 @@ async def update_ice_volume_graph():
     link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_map_thick_LA_EN_{date_str}.png"
     filename = f"ice_volume_map_{date_str}.png"
     await send_image_or_link(channel, link, "Map du volume de glace arctique :", filename)
+
+
+@tasks.loop(hours=24)
+async def update_greenland_surface_graph():
+    if greenland_surface_graph_channel is None:
+        return
+    print("Updating Greenland surface graph...")
+    channel = client.get_channel(greenland_surface_graph_channel)
+    date_str = datetime.now().strftime("%Y%m%d")
+    link = f"https://polarportal.dk/fileadmin/polarportal/surface/SMB_curves_LA_EN_{date_str}.png"
+    filename = f"greenland_surface_graph_{date_str}.png"
+    await send_image_or_link(channel, link, "Graphiques sur le niveau de glace du Groenland :", filename)
 
 
 @tasks.loop(hours=24)
