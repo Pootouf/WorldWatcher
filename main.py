@@ -94,7 +94,7 @@ async def update_surface_temperature():
         return
     print("Updating surface temperature...")
     channel = client.get_channel(surface_temperature_channel)
-    date_str = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
+    date_str = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/timeseries/era5_daily_series_2t_global_{date_str}.png"
     filename = f"surface_temperature_{date_str}.png"
     await send_image_or_link(channel, link, "Graphique des températures de surface mise à jour :", filename)
@@ -106,7 +106,7 @@ async def update_surface_temperature_map():
         return
     print("Updating surface temperature map...")
     channel = client.get_channel(surface_temperature_map_channel)
-    date_str = (datetime.now() - timedelta(days=4)).strftime("%Y%m%d")
+    date_str = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/maps/download/daily/2t/anomaly/2025/climpulse_map_era5_download_daily_2t_anomaly_{date_str}.png"
     filename = f"surface_temperature_map_{date_str}.png"
     await send_image_or_link(channel, link, "Map des températures de surface mise à jour :", filename)
@@ -118,7 +118,7 @@ async def update_sea_temperature():
         return
     print("Updating sea temperature...")
     channel = client.get_channel(sea_temperature_channel)
-    date_str = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
+    date_str = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/timeseries/era5_daily_series_sst_60S-60N_ocean_{date_str}.png"
     filename = f"sea_temperature_{date_str}.png"
     await send_image_or_link(channel, link, "Graphique des températures de l'océan mise à jour :", filename)
@@ -130,7 +130,7 @@ async def update_sea_temperature_map():
         return
     print("Updating sea temperature map...")
     channel = client.get_channel(sea_temperature_map_channel)
-    date_str = (datetime.now() - timedelta(days=4)).strftime("%Y%m%d")
+    date_str = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
     link = f"https://sites.ecmwf.int/data/climatepulse/maps/download/daily/sst/anomaly/2025/climpulse_map_era5_download_daily_sst_anomaly_{date_str}.png"
     filename = f"sea_temperature_map_{date_str}.png"
     await send_image_or_link(channel, link, "Map des températures de l'océan mise à jour :", filename)
