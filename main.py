@@ -14,12 +14,19 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 load_dotenv()
-surface_temperature_channel: int | None = int(os.getenv("CHANNEL_SURFACE_TEMPERATURE"))
-surface_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SURFACE_TEMPERATURE_MAP"))
-sea_temperature_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE"))
-sea_temperature_map_channel: int | None = int(os.getenv("CHANNEL_SEA_TEMPERATURE_MAP"))
-ice_volume_channel: int | None = int(os.getenv("CHANNEL_ICE_VOLUME"))
-co2_graph_channel: int | None = int(os.getenv("CHANNEL_CO2_GRAPH"))
+
+
+def get_channel_env(var_name):
+    value = os.getenv(var_name)
+    return int(value) if value is not None else None
+
+
+surface_temperature_channel: int | None = get_channel_env("CHANNEL_SURFACE_TEMPERATURE")
+surface_temperature_map_channel: int | None = get_channel_env("CHANNEL_SURFACE_TEMPERATURE_MAP")
+sea_temperature_channel: int | None = get_channel_env("CHANNEL_SEA_TEMPERATURE")
+sea_temperature_map_channel: int | None = get_channel_env("CHANNEL_SEA_TEMPERATURE_MAP")
+ice_volume_channel: int | None = get_channel_env("CHANNEL_ICE_VOLUME")
+co2_graph_channel: int | None = get_channel_env("CHANNEL_CO2_GRAPH")
 
 
 async def wait_until(hour: int, minute: int = 0):
@@ -65,7 +72,7 @@ async def send_image_or_link(channel, link, message, filename):
 
 @client.event
 async def on_ready():
-    await wait_until(20)
+    await wait_until(22)
     print("Bot is ready.")
     update_surface_temperature.start()
     update_surface_temperature_map.start()
