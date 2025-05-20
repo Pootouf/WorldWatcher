@@ -75,7 +75,7 @@ async def send_image_or_link(channel, link, message, filename):
 
 @client.event
 async def on_ready():
-    await wait_until(22)
+    await wait_until(20)
     print("Bot is ready.")
     update_surface_temperature.start()
     update_surface_temperature_map.start()
