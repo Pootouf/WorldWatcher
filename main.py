@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import subprocess
+import time
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -82,25 +83,24 @@ async def send_image_or_link(channel, link, message, filename):
         await channel.send(f"{message} {link}")
 
 
-async def fetch_img_src_with_selenium(url, css_selector):
+def fetch_img_src_with_selenium_sync(url, css_selector):
     chrome_options = Options()
-    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--single-process")
     chrome_options.add_argument("--no-zygote")
     chrome_options.add_argument("--disable-setuid-sandbox")
+    chrome_options.add_argument("--window-size=1920,1080")
     # Détecte la version de Chromium installée
     try:
         try:
             version_output = subprocess.check_output(["chromium", "--version"]).decode()
         except FileNotFoundError:
             version_output = subprocess.check_output(["chromium-browser", "--version"]).decode()
-        # version_output exemple: "Chromium 137.0.7151.119\n"
         version_number = version_output.strip().split()[1]
         major_version = version_number.split('.')[0]
     except Exception as e:
@@ -114,8 +114,13 @@ async def fetch_img_src_with_selenium(url, css_selector):
 
     try:
         driver = webdriver.Chrome(service=Service(driver_manager.install()), options=chrome_options)
+    except Exception as e:
+        print(f"Erreur critique lors du démarrage de Chrome/Chromium headless : {e}")
+        return None
+
+    try:
         driver.get(url)
-        await asyncio.sleep(5)
+        time.sleep(10)
         try:
             img = driver.find_element(By.CSS_SELECTOR, css_selector)
             img_src = img.get_attribute("src")
@@ -124,8 +129,16 @@ async def fetch_img_src_with_selenium(url, css_selector):
         driver.quit()
         return img_src
     except Exception as e:
-        print(f"Erreur lors du lancement de Chrome/Chromium headless : {e}")
+        print(f"Erreur lors du chargement ou parsing de la page : {e}")
+        driver.quit()
         return None
+
+
+selenium_lock = asyncio.Lock()
+
+async def fetch_img_src_with_selenium(url, css_selector):
+    async with selenium_lock:
+        return await asyncio.to_thread(fetch_img_src_with_selenium_sync, url, css_selector)
 
 
 async def send_polarportal_image(channel, url, css_selector, message):
