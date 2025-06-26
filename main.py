@@ -82,7 +82,7 @@ async def send_image_or_link(channel, link, message, filename):
         await channel.send(f"{message} {link}")
 
 
-def fetch_img_src_with_selenium_sync(url, css_selector):
+async def fetch_img_src_with_selenium(url, css_selector):
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
@@ -100,6 +100,7 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
             version_output = subprocess.check_output(["chromium", "--version"]).decode()
         except FileNotFoundError:
             version_output = subprocess.check_output(["chromium-browser", "--version"]).decode()
+        # version_output exemple: "Chromium 137.0.7151.119\n"
         version_number = version_output.strip().split()[1]
         major_version = version_number.split('.')[0]
     except Exception as e:
@@ -114,8 +115,7 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
     try:
         driver = webdriver.Chrome(service=Service(driver_manager.install()), options=chrome_options)
         driver.get(url)
-        import time
-        time.sleep(5)
+        await asyncio.sleep(5)
         try:
             img = driver.find_element(By.CSS_SELECTOR, css_selector)
             img_src = img.get_attribute("src")
@@ -126,13 +126,6 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
     except Exception as e:
         print(f"Erreur lors du lancement de Chrome/Chromium headless : {e}")
         return None
-
-
-selenium_lock = asyncio.Lock()
-
-async def fetch_img_src_with_selenium(url, css_selector):
-    async with selenium_lock:
-        return await asyncio.to_thread(fetch_img_src_with_selenium_sync, url, css_selector)
 
 
 async def send_polarportal_image(channel, url, css_selector, message):
