@@ -92,7 +92,10 @@ async def fetch_img_src_with_selenium(url, css_selector):
     chrome_options.add_argument("--remote-debugging-port=9222")
     # Détecte la version de Chromium installée
     try:
-        version_output = subprocess.check_output(["chromium-browser", "--version"]).decode()
+        try:
+            version_output = subprocess.check_output(["chromium", "--version"]).decode()
+        except FileNotFoundError:
+            version_output = subprocess.check_output(["chromium-browser", "--version"]).decode()
         # version_output exemple: "Chromium 137.0.7151.119\n"
         version_number = version_output.strip().split()[1]
         major_version = version_number.split('.')[0]
@@ -101,7 +104,7 @@ async def fetch_img_src_with_selenium(url, css_selector):
         major_version = None
 
     if major_version:
-        driver_manager = ChromeDriverManager(version=major_version)
+        driver_manager = ChromeDriverManager(driver_version=major_version)
     else:
         driver_manager = ChromeDriverManager()
 
