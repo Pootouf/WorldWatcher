@@ -10,6 +10,9 @@ import ssl
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -75,6 +78,41 @@ async def send_image_or_link(channel, link, message, filename):
     except Exception as e:
         print(f"Exception lors du téléchargement ou de l'envoi de l'image : {e}")
         await channel.send(f"{message} {link}")
+
+
+def fetch_img_src_with_selenium(url, css_selector):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    # On attend que le JS charge l'image (5s)
+    asyncio.get_event_loop().run_until_complete(asyncio.sleep(5))
+    try:
+        img = driver.find_element(By.CSS_SELECTOR, css_selector)
+        img_src = img.get_attribute("src")
+    except Exception:
+        img_src = None
+    driver.quit()
+    return img_src
+
+
+async def send_polarportal_image(channel, url, css_selector, message):
+    try:
+        img_src = await asyncio.to_thread(fetch_img_src_with_selenium, url, css_selector)
+        if img_src:
+            if img_src.startswith("/"):
+                img_url = "https://polarportal.dk" + img_src
+            else:
+                img_url = img_src
+            filename = img_url.split("/")[-1]
+            await send_image_or_link(channel, img_url, message, filename)
+        else:
+            await channel.send("Impossible de trouver l'image demandée sur Polar Portal.")
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'image Polar Portal : {e}")
+        await channel.send("Erreur lors de la récupération de l'image Polar Portal.")
 
 
 @client.event
@@ -148,27 +186,10 @@ async def update_ice_volume():
         return
     print("Updating ice volume...")
     channel = client.get_channel(ice_volume_channel)
-    try:
-        session = requests.Session()
-        session.mount('https://', UnsafeTLSAdapter())
-        url = "https://polarportal.dk/en/sea-ice-and-icebergs/sea-ice-thickness-and-volume/"
-        resp = session.get(url)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        img = soup.select_one("#c265 > div > div > div > div > div > div > div > div > div:nth-child(1) > img")
-        if img and img.has_attr("src"):
-            img_src = img["src"]
-            if img_src.startswith("/"):
-                img_url = "https://polarportal.dk" + img_src
-            else:
-                img_url = img_src
-            filename = img_url.split("/")[-1]
-            await send_image_or_link(channel, img_url, "Graphique du volume de glace arctique :", filename)
-        else:
-            await channel.send("Impossible de trouver l'image du volume de glace arctique.")
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'image du volume de glace : {e}")
-        await channel.send("Erreur lors de la récupération de l'image du volume de glace arctique.")
+    url = "https://polarportal.dk/en/sea-ice-and-icebergs/sea-ice-thickness-and-volume/"
+    css_selector = "#c265 > div > div > div > div > div > div > div > div > div:nth-child(1) > img"
+    message = "Graphique du volume de glace arctique :"
+    await send_polarportal_image(channel, url, css_selector, message)
 
 
 @tasks.loop(hours=24)
@@ -177,27 +198,10 @@ async def update_greenland_surface():
         return
     print("Updating Greenland surface stats...")
     channel = client.get_channel(greenland_surface_channel)
-    try:
-        session = requests.Session()
-        session.mount('https://', UnsafeTLSAdapter())
-        url = "https://polarportal.dk/en/greenland/surface-conditions"
-        resp = session.get(url)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        img = soup.select_one("#c64 > div > div > div > div > div > div:nth-child(1) > div > div > div:nth-child(1) > img")
-        if img and img.has_attr("src"):
-            img_src = img["src"]
-            if img_src.startswith("/"):
-                img_url = "https://polarportal.dk" + img_src
-            else:
-                img_url = img_src
-            filename = img_url.split("/")[-1]
-            await send_image_or_link(channel, img_url, "Informations sur les conditions de surface de la glace du Groenland :", filename)
-        else:
-            await channel.send("Impossible de trouver l'image des conditions de surface du Groenland.")
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'image des conditions de surface du Groenland : {e}")
-        await channel.send("Erreur lors de la récupération de l'image des conditions de surface du Groenland.")
+    url = "https://polarportal.dk/en/greenland/surface-conditions"
+    css_selector = "#c64 > div > div > div > div > div > div:nth-child(1) > div > div > div:nth-child(1) > img"
+    message = "Informations sur les conditions de surface de la glace du Groenland :"
+    await send_polarportal_image(channel, url, css_selector, message)
 
 
 @tasks.loop(hours=24)
@@ -206,27 +210,10 @@ async def update_greenland_melt():
         return
     print("Updating Greenland melt stats...")
     channel = client.get_channel(greenland_melt_channel)
-    try:
-        session = requests.Session()
-        session.mount('https://', UnsafeTLSAdapter())
-        url = "https://polarportal.dk/en/greenland/surface-conditions"
-        resp = session.get(url)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        img = soup.select_one("#c155 > div > div > div > div > div > div:nth-child(1) > div > div > img")
-        if img and img.has_attr("src"):
-            img_src = img["src"]
-            if img_src.startswith("/"):
-                img_url = "https://polarportal.dk" + img_src
-            else:
-                img_url = img_src
-            filename = img_url.split("/")[-1]
-            await send_image_or_link(channel, img_url, "Informations sur la surface de fonte de la glace du Groenland :", filename)
-        else:
-            await channel.send("Impossible de trouver l'image de la surface de fonte du Groenland.")
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'image de la surface de fonte du Groenland : {e}")
-        await channel.send("Erreur lors de la récupération de l'image de la surface de fonte du Groenland.")
+    url = "https://polarportal.dk/en/greenland/surface-conditions"
+    css_selector = "#c155 > div > div > div > div > div > div:nth-child(1) > div > div > img"
+    message = "Informations sur la surface de fonte de la glace du Groenland :"
+    await send_polarportal_image(channel, url, css_selector, message)
 
 
 @tasks.loop(hours=24)
