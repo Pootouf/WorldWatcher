@@ -14,6 +14,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import subprocess
+
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
@@ -88,7 +90,22 @@ async def fetch_img_src_with_selenium(url, css_selector):
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-software-rasterizer")
     chrome_options.add_argument("--remote-debugging-port=9222")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    # Détecte la version de Chromium installée
+    try:
+        version_output = subprocess.check_output(["chromium-browser", "--version"]).decode()
+        # version_output exemple: "Chromium 137.0.7151.119\n"
+        version_number = version_output.strip().split()[1]
+        major_version = version_number.split('.')[0]
+    except Exception as e:
+        print(f"Erreur lors de la détection de la version de Chromium : {e}")
+        major_version = None
+
+    if major_version:
+        driver_manager = ChromeDriverManager(version=major_version)
+    else:
+        driver_manager = ChromeDriverManager()
+
+    driver = webdriver.Chrome(service=Service(driver_manager.install()), options=chrome_options)
     driver.get(url)
     await asyncio.sleep(5)
     try:
