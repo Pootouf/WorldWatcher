@@ -95,7 +95,7 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
     chrome_options.add_argument("--no-zygote")
     chrome_options.add_argument("--disable-setuid-sandbox")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--remote-debugging-pipe")
     # Détecte la version de Chromium installée
     try:
         try:
