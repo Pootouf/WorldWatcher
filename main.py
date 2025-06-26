@@ -88,13 +88,9 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-software-rasterizer")
     chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--single-process")
-    chrome_options.add_argument("--no-zygote")
     chrome_options.add_argument("--disable-setuid-sandbox")
-    chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--remote-debugging-pipe")
     # Détecte la version de Chromium installée
     try:
@@ -121,7 +117,7 @@ def fetch_img_src_with_selenium_sync(url, css_selector):
 
     try:
         driver.get(url)
-        time.sleep(10)
+        time.sleep(5)
         try:
             img = driver.find_element(By.CSS_SELECTOR, css_selector)
             img_src = img.get_attribute("src")
