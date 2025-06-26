@@ -9,6 +9,7 @@ from io import BytesIO
 import ssl
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
+from bs4 import BeautifulSoup
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -86,7 +87,6 @@ async def on_ready():
     update_sea_temperature_map.start()
     update_ice_volume.start()
     update_co2_graph.start()
-    update_ice_volume_map.start()
     update_greenland_surface.start()
     update_greenland_melt.start()
     update_antarctic_sea_ice_concentration_map.start()
@@ -148,22 +148,27 @@ async def update_ice_volume():
         return
     print("Updating ice volume...")
     channel = client.get_channel(ice_volume_channel)
-    date_str = datetime.now().strftime("%Y%m%d")
-    link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_curve_thick_LA_EN_{date_str}.png"
-    filename = f"ice_volume_{date_str}.png"
-    await send_image_or_link(channel, link, "Graphique du volume de glace arctique :", filename)
-
-
-@tasks.loop(hours=24)
-async def update_ice_volume_map():
-    if ice_volume_map_channel is None:
-        return
-    print("Updating ice volume map...")
-    channel = client.get_channel(ice_volume_map_channel)
-    date_str = datetime.now().strftime("%Y%m%d")
-    link = f"https://polarportal.dk/fileadmin/polarportal/sea/CICE_map_thick_LA_EN_{date_str}.png"
-    filename = f"ice_volume_map_{date_str}.png"
-    await send_image_or_link(channel, link, "Map du volume de glace arctique :", filename)
+    try:
+        session = requests.Session()
+        session.mount('https://', UnsafeTLSAdapter())
+        url = "https://polarportal.dk/en/sea-ice-and-icebergs/sea-ice-thickness-and-volume/"
+        resp = session.get(url)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        img = soup.select_one("#c265 > div > div > div > div > div > div > div > div > div:nth-child(1) > img")
+        if img and img.has_attr("src"):
+            img_src = img["src"]
+            if img_src.startswith("/"):
+                img_url = "https://polarportal.dk" + img_src
+            else:
+                img_url = img_src
+            filename = img_url.split("/")[-1]
+            await send_image_or_link(channel, img_url, "Graphique du volume de glace arctique :", filename)
+        else:
+            await channel.send("Impossible de trouver l'image du volume de glace arctique.")
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'image du volume de glace : {e}")
+        await channel.send("Erreur lors de la récupération de l'image du volume de glace arctique.")
 
 
 @tasks.loop(hours=24)
