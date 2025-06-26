@@ -177,10 +177,27 @@ async def update_greenland_surface():
         return
     print("Updating Greenland surface stats...")
     channel = client.get_channel(greenland_surface_channel)
-    date_str = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
-    link = f"https://polarportal.dk/fileadmin/polarportal/surface/SMB_combine_SM_day_EN_{date_str}.png"
-    filename = f"greenland_surface_{date_str}.png"
-    await send_image_or_link(channel, link, "Informations sur les conditions de surface de la glace du Groenland :", filename)
+    try:
+        session = requests.Session()
+        session.mount('https://', UnsafeTLSAdapter())
+        url = "https://polarportal.dk/en/greenland/surface-conditions"
+        resp = session.get(url)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        img = soup.select_one("#c64 > div > div > div > div > div > div:nth-child(1) > div > div > div:nth-child(1) > img")
+        if img and img.has_attr("src"):
+            img_src = img["src"]
+            if img_src.startswith("/"):
+                img_url = "https://polarportal.dk" + img_src
+            else:
+                img_url = img_src
+            filename = img_url.split("/")[-1]
+            await send_image_or_link(channel, img_url, "Informations sur les conditions de surface de la glace du Groenland :", filename)
+        else:
+            await channel.send("Impossible de trouver l'image des conditions de surface du Groenland.")
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'image des conditions de surface du Groenland : {e}")
+        await channel.send("Erreur lors de la récupération de l'image des conditions de surface du Groenland.")
 
 
 @tasks.loop(hours=24)
@@ -189,10 +206,27 @@ async def update_greenland_melt():
         return
     print("Updating Greenland melt stats...")
     channel = client.get_channel(greenland_melt_channel)
-    date_str = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
-    link = f"https://polarportal.dk/fileadmin/polarportal/meltarea/MELTA_combine_SM_EN_{date_str}.png"
-    filename = f"greenland_melt_{date_str}.png"
-    await send_image_or_link(channel, link, "Informations sur la surface de fonte de la glace du Groenland :", filename)
+    try:
+        session = requests.Session()
+        session.mount('https://', UnsafeTLSAdapter())
+        url = "https://polarportal.dk/en/greenland/surface-conditions"
+        resp = session.get(url)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        img = soup.select_one("#c155 > div > div > div > div > div > div:nth-child(1) > div > div > img")
+        if img and img.has_attr("src"):
+            img_src = img["src"]
+            if img_src.startswith("/"):
+                img_url = "https://polarportal.dk" + img_src
+            else:
+                img_url = img_src
+            filename = img_url.split("/")[-1]
+            await send_image_or_link(channel, img_url, "Informations sur la surface de fonte de la glace du Groenland :", filename)
+        else:
+            await channel.send("Impossible de trouver l'image de la surface de fonte du Groenland.")
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'image de la surface de fonte du Groenland : {e}")
+        await channel.send("Erreur lors de la récupération de l'image de la surface de fonte du Groenland.")
 
 
 @tasks.loop(hours=24)
