@@ -80,15 +80,14 @@ async def send_image_or_link(channel, link, message, filename):
         await channel.send(f"{message} {link}")
 
 
-def fetch_img_src_with_selenium(url, css_selector):
+async def fetch_img_src_with_selenium(url, css_selector):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
-    # On attend que le JS charge l'image (5s)
-    asyncio.get_event_loop().run_until_complete(asyncio.sleep(5))
+    await asyncio.sleep(5)
     try:
         img = driver.find_element(By.CSS_SELECTOR, css_selector)
         img_src = img.get_attribute("src")
@@ -100,7 +99,7 @@ def fetch_img_src_with_selenium(url, css_selector):
 
 async def send_polarportal_image(channel, url, css_selector, message):
     try:
-        img_src = await asyncio.to_thread(fetch_img_src_with_selenium, url, css_selector)
+        img_src = await fetch_img_src_with_selenium(url, css_selector)
         if img_src:
             if img_src.startswith("/"):
                 img_url = "https://polarportal.dk" + img_src
@@ -120,16 +119,27 @@ async def on_ready():
     await wait_until(20)
     print("Bot is ready.")
     update_surface_temperature.start()
+    await asyncio.sleep(3)
     update_surface_temperature_map.start()
+    await asyncio.sleep(3)
     update_sea_temperature.start()
+    await asyncio.sleep(3)
     update_sea_temperature_map.start()
+    await asyncio.sleep(3)
     update_ice_volume.start()
+    await asyncio.sleep(3)
     update_co2_graph.start()
+    await asyncio.sleep(3)
     update_greenland_surface.start()
+    await asyncio.sleep(3)
     update_greenland_melt.start()
+    await asyncio.sleep(3)
     update_antarctic_sea_ice_concentration_map.start()
+    await asyncio.sleep(3)
     update_antarctic_sea_ice_extent_map.start()
+    await asyncio.sleep(3)
     update_antarctic_sea_ice_extent_graph.start()
+    await asyncio.sleep(3)
 
 
 @tasks.loop(hours=24)
