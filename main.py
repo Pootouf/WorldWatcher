@@ -90,6 +90,10 @@ async def fetch_img_src_with_selenium(url, css_selector):
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-software-rasterizer")
     chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--single-process")
+    chrome_options.add_argument("--no-zygote")
+    chrome_options.add_argument("--disable-setuid-sandbox")
     # Détecte la version de Chromium installée
     try:
         try:
@@ -108,16 +112,20 @@ async def fetch_img_src_with_selenium(url, css_selector):
     else:
         driver_manager = ChromeDriverManager()
 
-    driver = webdriver.Chrome(service=Service(driver_manager.install()), options=chrome_options)
-    driver.get(url)
-    await asyncio.sleep(5)
     try:
-        img = driver.find_element(By.CSS_SELECTOR, css_selector)
-        img_src = img.get_attribute("src")
-    except Exception:
-        img_src = None
-    driver.quit()
-    return img_src
+        driver = webdriver.Chrome(service=Service(driver_manager.install()), options=chrome_options)
+        driver.get(url)
+        await asyncio.sleep(5)
+        try:
+            img = driver.find_element(By.CSS_SELECTOR, css_selector)
+            img_src = img.get_attribute("src")
+        except Exception:
+            img_src = None
+        driver.quit()
+        return img_src
+    except Exception as e:
+        print(f"Erreur lors du lancement de Chrome/Chromium headless : {e}")
+        return None
 
 
 async def send_polarportal_image(channel, url, css_selector, message):
